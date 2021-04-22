@@ -115,17 +115,27 @@ exports.update = (req, res) => {
         res.status(400).json({ message: "Request body can not be empty!" });
         return;
     }
-
-    Tutorial.update(req.body, { where: { id: req.params.tutorialID } })
-        .then(num => {
-            if (num == 1) {
-                res.json({
-                    message: `Tutorial with id=${req.params.tutorialID} was updated successfully.`
-                });
-            } else {
+    Tutorial.findByPk(req.params.tutorialID)
+        .then(tutorial => {
+            // no data returned means there is no tutorial in DB with that given ID 
+            if (tutorial === null)
                 res.status(404).json({
-                    message: `Not found Tutorial with id=${req.params.tutorialID}.`
+                    message: `Not found Tutorial with id ${req.params.tutorialID}.`
                 });
+            else {
+                Tutorial.update(req.body, { where: { id: req.params.tutorialID } })
+                    .then(num => {
+                        // check if one comment was updated (returns 0 if no data was updated)
+                        if (num == 1) {
+                            res.status(200).json({
+                                message: `Tutorial id=${req.params.tutorialID} was updated successfully.`
+                            });
+                        } else {
+                            res.status(200).json({
+                                message: `No updates were made on Tutorial id=${req.params.tutorialID}.`
+                            });
+                        }
+                    })
             }
         })
         .catch(err => {
